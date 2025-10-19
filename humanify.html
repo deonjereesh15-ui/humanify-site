@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Humanify — Make AI Text Sound Human</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 20px;
+      color: #1f2937;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 30px;
+      color: #111827;
+    }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .box {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+      flex: 1;
+      min-width: 320px;
+      display: flex;
+      flex-direction: column;
+    }
+    label {
+      font-weight: 600;
+      margin-top: 10px;
+      margin-bottom: 5px;
+      color: #374151;
+    }
+    textarea {
+      width: 100%;
+      height: 160px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #d1d5db;
+      resize: none;
+      font-size: 14px;
+    }
+    select, input[type=range] {
+      width: 100%;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      margin-bottom: 8px;
+    }
+    input[type=checkbox] {
+      margin-right: 6px;
+    }
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 12px;
+      background: #3b82f6;
+      color: #ffffff;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #2563eb;
+    }
+    button:disabled {
+      background: #93c5fd;
+      cursor: not-allowed;
+    }
+    #outputText {
+      min-height: 160px;
+      background: #f9fafb;
+      padding: 12px;
+      border-radius: 12px;
+      white-space: pre-wrap;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .history {
+      max-height: 150px;
+      overflow-y: auto;
+      margin-top: 15px;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 8px;
+    }
+    .history-item {
+      font-size: 13px;
+      margin-bottom: 8px;
+      padding: 6px;
+      border-radius: 8px;
+      background: #f3f4f6;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .history-item:hover {
+      background: #e5e7eb;
+    }
+    @media(max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Humanify — Make AI Text Sound Human</h1>
+  <div class="container">
+    <div class="box">
+      <label>AI Text (input)</label>
+      <textarea id="inputText" placeholder="Paste AI text here..."></textarea>
+      <label>Tone</label>
+      <select id="tone">
+        <option value="casual">Casual</option>
+        <option value="friendly">Friendly</option>
+        <option value="professional">Professional</option>
+      </select>
+      <label>Formality: <span id="formalityValue">50</span>%</label>
+      <input type="range" id="formality" min="0" max="100" value="50">
+      <label>Naturalness: <span id="naturalnessValue">60</span>%</label>
+      <input type="range" id="naturalness" min="0" max="100" value="60">
+      <label><input type="checkbox" id="addFillers" checked> Add small natural fillers</label>
+      <button id="humanifyBtn">Humanify</button>
+    </div>
+
+    <div class="box">
+      <label>Humanified Output</label>
+      <div id="outputText"></div>
+      <button id="copyBtn">Copy</button>
+      <button id="downloadBtn">Download</button>
+      <div class="history" id="history"></div>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById('inputText');
+    const output = document.getElementById('outputText');
+    const toneSelect = document.getElementById('tone');
+    const formality = document.getElementById('formality');
+    const formalityValue = document.getElementById('formalityValue');
+    const naturalness = document.getElementById('naturalness');
+    const naturalnessValue = document.getElementById('naturalnessValue');
+    const addFillers = document.getElementById('addFillers');
+    const humanifyBtn = document.getElementById('humanifyBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const historyDiv = document.getElementById('history');
+
+    let history = [];
+
+    formality.oninput = () => formalityValue.innerText = formality.value;
+    naturalness.oninput = () => naturalnessValue.innerText = naturalness.value;
+
+    function humanify(text) {
+      if(!text) return '';
+      let s = text;
+      if(formality.value < 60) {
+        s = s.replace(/\butilize\b/gi,'use').replace(/\bcommence\b/gi,'start').replace(/\bendeavor\b/gi,'try');
+      }
+      if(toneSelect.value !== 'professional' || formality.value < 80){
+        s = s.replace(/\bdo not\b/gi,"don't").replace(/\bis not\b/gi,"isn't");
+      }
+      if(addFillers.checked && Math.random()<0.3){
+        s += ', you know';
+      }
+      return s.replace(/\s+/g,' ').trim();
+    }
+
+    function saveHistory(orig, human) {
+      history.unshift({orig, human});
+      if(history.length>10) history.pop();
+      renderHistory();
+    }
+
+    function renderHistory(){
+      historyDiv.innerHTML = '';
+      history.forEach((h)=>{
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerText = `Input: ${h.orig}\nHumanified: ${h.human}`;
+        div.onclick = ()=>{input.value=h.orig; output.innerText=h.human;};
+        historyDiv.appendChild(div);
+      });
+    }
+
+    humanifyBtn.onclick = ()=>{
+      const human = humanify(input.value);
+      output.innerText = human;
+      saveHistory(input.value, human);
+    };
+
+    copyBtn.onclick = ()=>{
+      navigator.clipboard.writeText(output.innerText);
+      alert('Copied!');
+    };
+
+    downloadBtn.onclick = ()=>{
+      const blob = new Blob([output.innerText],{type:'text/plain'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'humanified.txt';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    };
+  </script>
+</body>
+</html>
