@@ -13,15 +13,16 @@
       --bg-light: linear-gradient(135deg, #f8f9fb, #ffffff);
     }
 
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Poppins', sans-serif;
       background: var(--bg-dark);
       color: #e6fff9;
       margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      overflow: hidden;
       transition: background 0.6s ease, color 0.6s ease;
     }
 
@@ -43,6 +44,7 @@
       font-size: 1.2rem;
       transition: all 0.3s ease;
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      z-index: 100;
     }
 
     .theme-toggle { right: 20px; }
@@ -50,6 +52,21 @@
 
     .theme-toggle:hover, .menu-toggle:hover {
       transform: rotate(20deg) scale(1.1);
+    }
+
+    main {
+      display: flex;
+      width: 200%;
+      height: 100vh;
+      transition: transform 0.8s ease-in-out;
+    }
+
+    .page {
+      width: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.6s ease;
     }
 
     .container {
@@ -128,7 +145,7 @@
       box-shadow: 0 6px 25px rgba(0, 255, 204, 0.3);
     }
 
-    #output {
+    #output, #detectorOutput {
       margin-top: 20px;
       background: rgba(0, 0, 0, 0.15);
       border-radius: 12px;
@@ -141,7 +158,8 @@
       white-space: pre-wrap;
     }
 
-    body.light #output {
+    body.light #output,
+    body.light #detectorOutput {
       background: rgba(0, 0, 0, 0.05);
     }
 
@@ -150,55 +168,67 @@
       font-size: 0.9rem;
       opacity: 0.8;
     }
-
-    .hidden {
-      display: none;
-      opacity: 0;
-    }
   </style>
 </head>
 <body>
   <button class="menu-toggle" onclick="togglePage()">📋</button>
   <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
 
-  <!-- Humanify Page -->
-  <div class="container" id="humanifyPage">
-    <h1>🧠 Humanify AI Text</h1>
-    <p>Paste your AI-generated text below, and let's make it sound more human!</p>
+  <main id="main">
+    <!-- Humanify Page -->
+    <section class="page" id="humanifyPage">
+      <div class="container">
+        <h1>🧠 Humanify AI Text</h1>
+        <p>Paste your AI-generated text below, and let's make it sound more human!</p>
+        <textarea id="input" placeholder="Paste AI text here..."></textarea>
 
-    <textarea id="input" placeholder="Paste AI text here..."></textarea>
+        <div class="buttons">
+          <button class="action" onclick="humanifyText()">Humanify</button>
+          <button class="action" onclick="copyText()">Copy</button>
+          <button class="action" onclick="clearText()">Clear</button>
+        </div>
 
-    <div class="buttons">
-      <button class="action" onclick="humanifyText()">Humanify</button>
-      <button class="action" onclick="copyText()">Copy</button>
-      <button class="action" onclick="clearText()">Clear</button>
-    </div>
+        <div id="output">Your humanified text will appear here...</div>
+        <footer>Made with 💙 by You</footer>
+      </div>
+    </section>
 
-    <div id="output">Your humanified text will appear here...</div>
-    <footer>Made with 💙 by You</footer>
-  </div>
+    <!-- AI Detector Page -->
+    <section class="page" id="detectorPage">
+      <div class="container">
+        <h1>🔍 AI Detector</h1>
+        <p>Paste text below to see if it sounds AI-generated or human-like.</p>
+        <textarea id="detectorInput" placeholder="Paste text to analyze..."></textarea>
 
-  <!-- AI Detector Page -->
-  <div class="container hidden" id="detectorPage">
-    <h1>🔍 AI Detector</h1>
-    <p>Paste text below to see if it sounds AI-generated or human-like.</p>
+        <div class="buttons">
+          <button class="action" onclick="detectAI()">Analyze</button>
+          <button class="action" onclick="clearDetector()">Clear</button>
+        </div>
 
-    <textarea id="detectorInput" placeholder="Paste text to analyze..."></textarea>
-
-    <div class="buttons">
-      <button class="action" onclick="detectAI()">Analyze</button>
-      <button class="action" onclick="clearDetector()">Clear</button>
-    </div>
-
-    <div id="detectorOutput">Result will appear here...</div>
-    <footer>Made with ⚡ by You</footer>
-  </div>
+        <div id="detectorOutput">Result will appear here...</div>
+        <footer>Made with ⚡ by You</footer>
+      </div>
+    </section>
+  </main>
 
   <script>
+    let showingHumanify = true;
+
+    function togglePage() {
+      showingHumanify = !showingHumanify;
+      const main = document.getElementById('main');
+      main.style.transform = showingHumanify ? "translateX(0%)" : "translateX(-50%)";
+    }
+
+    function toggleTheme() {
+      const isLight = document.body.classList.toggle('light');
+      document.querySelector('.theme-toggle').innerText = isLight ? '☀️' : '🌙';
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    }
+
     function humanifyText() {
       const input = document.getElementById('input').value.trim();
       if (!input) return alert("Please enter some text first!");
-
       const phrases = ["you know,", "basically,", "kind of like", "to be honest,", "so yeah,", "I mean,", "honestly,", "in a way,"];
       let output = input
         .replace(/\butilizes\b/g, "uses")
@@ -208,7 +238,6 @@
         .replace(/\boptimize(s|d|ing)?\b/g, "make better")
         .replace(/\bensure(s|d)?\b/g, "make sure")
         .replace(/\bsubsequent\b/g, "next");
-
       output = output.split(". ").map(s => s + " " + phrases[Math.floor(Math.random() * phrases.length)]).join(". ");
       document.getElementById('output').innerText = output;
     }
@@ -216,7 +245,6 @@
     function detectAI() {
       const text = document.getElementById('detectorInput').value.trim();
       if (!text) return alert("Please enter text first!");
-
       const aiWords = ["optimize", "facilitate", "utilize", "leverages", "algorithm", "framework", "architecture"];
       const aiCount = aiWords.filter(w => text.toLowerCase().includes(w)).length;
       let result = "🧍‍♂️ This text sounds pretty human!";
@@ -238,20 +266,6 @@
     function clearDetector() {
       document.getElementById('detectorInput').value = "";
       document.getElementById('detectorOutput').innerText = "Result will appear here...";
-    }
-
-    function toggleTheme() {
-      const isLight = document.body.classList.toggle('light');
-      document.querySelector('.theme-toggle').innerText = isLight ? '☀️' : '🌙';
-      localStorage.setItem('theme', isLight ? 'light' : 'dark');
-    }
-
-    function togglePage() {
-      const humanify = document.getElementById('humanifyPage');
-      const detector = document.getElementById('detectorPage');
-      const showingHumanify = !humanify.classList.contains('hidden');
-      humanify.classList.toggle('hidden', showingHumanify);
-      detector.classList.toggle('hidden', !showingHumanify);
     }
 
     window.onload = () => {
