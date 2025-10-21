@@ -1,218 +1,265 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Humanify — Make AI Text Sound Human</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Humanify & AI Detector</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+    :root {
+      --accent: #00ffcc;
+      --bg-dark: linear-gradient(135deg, #0f1724, #18202b);
+      --bg-light: linear-gradient(135deg, #f8f9fb, #ffffff);
+    }
+
     body {
-      font-family: 'Inter', sans-serif;
-      background: #f3f4f6;
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg-dark);
+      color: #e6fff9;
       margin: 0;
-      padding: 20px;
-      color: #1f2937;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.6s ease, color 0.6s ease;
     }
-    h1 {
-      text-align: center;
-      font-size: 2.2rem;
-      font-weight: 700;
-      margin-bottom: 30px;
-      color: #111827;
+
+    body.light {
+      background: var(--bg-light);
+      color: #0f1724;
     }
+
+    .theme-toggle, .menu-toggle {
+      position: fixed;
+      top: 20px;
+      background: var(--accent);
+      border: none;
+      color: #000;
+      border-radius: 50%;
+      width: 42px;
+      height: 42px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .theme-toggle { right: 20px; }
+    .menu-toggle { left: 20px; }
+
+    .theme-toggle:hover, .menu-toggle:hover {
+      transform: rotate(20deg) scale(1.1);
+    }
+
     .container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      max-width: 1000px;
-      margin: 0 auto;
+      width: 90%;
+      max-width: 800px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(15px);
+      transition: all 0.4s ease, opacity 0.6s ease;
     }
-    .box {
-      background: #ffffff;
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-      flex: 1;
-      min-width: 320px;
-      display: flex;
-      flex-direction: column;
+
+    body.light .container {
+      background: rgba(0, 0, 0, 0.05);
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
     }
-    label {
-      font-weight: 600;
-      margin-top: 10px;
-      margin-bottom: 5px;
-      color: #374151;
+
+    h1 {
+      font-size: 2.2rem;
+      color: var(--accent);
+      margin-bottom: 12px;
     }
+
+    p {
+      opacity: 0.9;
+      margin-bottom: 20px;
+    }
+
     textarea {
       width: 100%;
-      height: 160px;
-      padding: 12px;
+      height: 120px;
       border-radius: 12px;
-      border: 1px solid #d1d5db;
-      resize: none;
-      font-size: 14px;
-    }
-    select, input[type=range] {
-      width: 100%;
-      padding: 8px;
-      border-radius: 8px;
-      border: 1px solid #d1d5db;
-      margin-bottom: 8px;
-    }
-    input[type=checkbox] {
-      margin-right: 6px;
-    }
-    button {
-      padding: 10px 16px;
       border: none;
-      border-radius: 12px;
-      background: #3b82f6;
-      color: #ffffff;
+      outline: none;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.15);
+      color: inherit;
+      font-size: 1rem;
+      resize: none;
+      transition: all 0.3s ease;
+    }
+
+    body.light textarea {
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    textarea:focus {
+      background: rgba(255, 255, 255, 0.25);
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    .buttons {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button.action {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
       font-weight: 600;
       cursor: pointer;
-      margin-top: 10px;
-      transition: background 0.3s;
+      transition: all 0.3s ease;
     }
-    button:hover {
-      background: #2563eb;
+
+    button.action:hover {
+      background: #00e0b5;
+      transform: translateY(-3px);
+      box-shadow: 0 6px 25px rgba(0, 255, 204, 0.3);
     }
-    button:disabled {
-      background: #93c5fd;
-      cursor: not-allowed;
-    }
-    #outputText {
-      min-height: 160px;
-      background: #f9fafb;
-      padding: 12px;
+
+    #output {
+      margin-top: 20px;
+      background: rgba(0, 0, 0, 0.15);
       border-radius: 12px;
+      padding: 15px;
+      text-align: left;
+      font-size: 1rem;
+      min-height: 100px;
+      color: inherit;
+      transition: background 0.4s ease;
       white-space: pre-wrap;
-      font-size: 14px;
-      line-height: 1.5;
     }
-    .history {
-      max-height: 150px;
-      overflow-y: auto;
-      margin-top: 15px;
-      border-top: 1px solid #e5e7eb;
-      padding-top: 8px;
+
+    body.light #output {
+      background: rgba(0, 0, 0, 0.05);
     }
-    .history-item {
-      font-size: 13px;
-      margin-bottom: 8px;
-      padding: 6px;
-      border-radius: 8px;
-      background: #f3f4f6;
-      cursor: pointer;
-      transition: background 0.2s;
+
+    footer {
+      margin-top: 25px;
+      font-size: 0.9rem;
+      opacity: 0.8;
     }
-    .history-item:hover {
-      background: #e5e7eb;
-    }
-    @media(max-width: 768px) {
-      .container {
-        flex-direction: column;
-      }
+
+    .hidden {
+      display: none;
+      opacity: 0;
     }
   </style>
 </head>
 <body>
-  <h1>Humanify — Make AI Text Sound Human</h1>
-  <div class="container">
-    <div class="box">
-      <label>AI Text (input)</label>
-      <textarea id="inputText" placeholder="Paste AI text here..."></textarea>
-      <label>Tone</label>
-      <select id="tone">
-        <option value="casual">Casual</option>
-        <option value="friendly">Friendly</option>
-        <option value="professional">Professional</option>
-      </select>
-      <label>Formality: <span id="formalityValue">50</span>%</label>
-      <input type="range" id="formality" min="0" max="100" value="50">
-      <label>Naturalness: <span id="naturalnessValue">60</span>%</label>
-      <input type="range" id="naturalness" min="0" max="100" value="60">
-      <label><input type="checkbox" id="addFillers" checked> Add small natural fillers</label>
-      <button id="humanifyBtn">Humanify</button>
+  <button class="menu-toggle" onclick="togglePage()">📋</button>
+  <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+
+  <!-- Humanify Page -->
+  <div class="container" id="humanifyPage">
+    <h1>🧠 Humanify AI Text</h1>
+    <p>Paste your AI-generated text below, and let's make it sound more human!</p>
+
+    <textarea id="input" placeholder="Paste AI text here..."></textarea>
+
+    <div class="buttons">
+      <button class="action" onclick="humanifyText()">Humanify</button>
+      <button class="action" onclick="copyText()">Copy</button>
+      <button class="action" onclick="clearText()">Clear</button>
     </div>
 
-    <div class="box">
-      <label>Humanified Output</label>
-      <div id="outputText"></div>
-      <button id="copyBtn">Copy</button>
-      <button id="downloadBtn">Download</button>
-      <div class="history" id="history"></div>
+    <div id="output">Your humanified text will appear here...</div>
+    <footer>Made with 💙 by You</footer>
+  </div>
+
+  <!-- AI Detector Page -->
+  <div class="container hidden" id="detectorPage">
+    <h1>🔍 AI Detector</h1>
+    <p>Paste text below to see if it sounds AI-generated or human-like.</p>
+
+    <textarea id="detectorInput" placeholder="Paste text to analyze..."></textarea>
+
+    <div class="buttons">
+      <button class="action" onclick="detectAI()">Analyze</button>
+      <button class="action" onclick="clearDetector()">Clear</button>
     </div>
+
+    <div id="detectorOutput">Result will appear here...</div>
+    <footer>Made with ⚡ by You</footer>
   </div>
 
   <script>
-    const input = document.getElementById('inputText');
-    const output = document.getElementById('outputText');
-    const toneSelect = document.getElementById('tone');
-    const formality = document.getElementById('formality');
-    const formalityValue = document.getElementById('formalityValue');
-    const naturalness = document.getElementById('naturalness');
-    const naturalnessValue = document.getElementById('naturalnessValue');
-    const addFillers = document.getElementById('addFillers');
-    const humanifyBtn = document.getElementById('humanifyBtn');
-    const copyBtn = document.getElementById('copyBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const historyDiv = document.getElementById('history');
+    function humanifyText() {
+      const input = document.getElementById('input').value.trim();
+      if (!input) return alert("Please enter some text first!");
 
-    let history = [];
+      const phrases = ["you know,", "basically,", "kind of like", "to be honest,", "so yeah,", "I mean,", "honestly,", "in a way,"];
+      let output = input
+        .replace(/\butilizes\b/g, "uses")
+        .replace(/\bleverages\b/g, "makes use of")
+        .replace(/\benhances\b/g, "improves")
+        .replace(/\bfacilitates\b/g, "helps with")
+        .replace(/\boptimize(s|d|ing)?\b/g, "make better")
+        .replace(/\bensure(s|d)?\b/g, "make sure")
+        .replace(/\bsubsequent\b/g, "next");
 
-    formality.oninput = () => formalityValue.innerText = formality.value;
-    naturalness.oninput = () => naturalnessValue.innerText = naturalness.value;
-
-    function humanify(text) {
-      if(!text) return '';
-      let s = text;
-      if(formality.value < 60) {
-        s = s.replace(/\butilize\b/gi,'use').replace(/\bcommence\b/gi,'start').replace(/\bendeavor\b/gi,'try');
-      }
-      if(toneSelect.value !== 'professional' || formality.value < 80){
-        s = s.replace(/\bdo not\b/gi,"don't").replace(/\bis not\b/gi,"isn't");
-      }
-      if(addFillers.checked && Math.random()<0.3){
-        s += ', you know';
-      }
-      return s.replace(/\s+/g,' ').trim();
+      output = output.split(". ").map(s => s + " " + phrases[Math.floor(Math.random() * phrases.length)]).join(". ");
+      document.getElementById('output').innerText = output;
     }
 
-    function saveHistory(orig, human) {
-      history.unshift({orig, human});
-      if(history.length>10) history.pop();
-      renderHistory();
+    function detectAI() {
+      const text = document.getElementById('detectorInput').value.trim();
+      if (!text) return alert("Please enter text first!");
+
+      const aiWords = ["optimize", "facilitate", "utilize", "leverages", "algorithm", "framework", "architecture"];
+      const aiCount = aiWords.filter(w => text.toLowerCase().includes(w)).length;
+      let result = "🧍‍♂️ This text sounds pretty human!";
+      if (aiCount >= 3) result = "🤖 This text seems AI-generated!";
+      else if (aiCount >= 1) result = "⚠️ This text might be partly AI-written.";
+      document.getElementById('detectorOutput').innerText = result;
     }
 
-    function renderHistory(){
-      historyDiv.innerHTML = '';
-      history.forEach((h)=>{
-        const div = document.createElement('div');
-        div.className = 'history-item';
-        div.innerText = `Input: ${h.orig}\nHumanified: ${h.human}`;
-        div.onclick = ()=>{input.value=h.orig; output.innerText=h.human;};
-        historyDiv.appendChild(div);
-      });
+    function copyText() {
+      navigator.clipboard.writeText(document.getElementById('output').innerText);
+      alert("Copied to clipboard!");
     }
 
-    humanifyBtn.onclick = ()=>{
-      const human = humanify(input.value);
-      output.innerText = human;
-      saveHistory(input.value, human);
-    };
+    function clearText() {
+      document.getElementById('input').value = "";
+      document.getElementById('output').innerText = "Your humanified text will appear here...";
+    }
 
-    copyBtn.onclick = ()=>{
-      navigator.clipboard.writeText(output.innerText);
-      alert('Copied!');
-    };
+    function clearDetector() {
+      document.getElementById('detectorInput').value = "";
+      document.getElementById('detectorOutput').innerText = "Result will appear here...";
+    }
 
-    downloadBtn.onclick = ()=>{
-      const blob = new Blob([output.innerText],{type:'text/plain'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'humanified.txt';
-      a.click();
-      URL.revokeObjectURL(a.href);
+    function toggleTheme() {
+      const isLight = document.body.classList.toggle('light');
+      document.querySelector('.theme-toggle').innerText = isLight ? '☀️' : '🌙';
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    }
+
+    function togglePage() {
+      const humanify = document.getElementById('humanifyPage');
+      const detector = document.getElementById('detectorPage');
+      const showingHumanify = !humanify.classList.contains('hidden');
+      humanify.classList.toggle('hidden', showingHumanify);
+      detector.classList.toggle('hidden', !showingHumanify);
+    }
+
+    window.onload = () => {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'light') {
+        document.body.classList.add('light');
+        document.querySelector('.theme-toggle').innerText = '☀️';
+      }
     };
   </script>
 </body>
